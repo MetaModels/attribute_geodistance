@@ -54,8 +54,8 @@ class AddCountryMigration extends AbstractMigration
     /**
      * Create a new instance.
      *
-     * @param Connection       $connection The database connection.
-     * @param TableManipulator $tableManipulator
+     * @param Connection       $connection       The database connection.
+     * @param TableManipulator $tableManipulator The table manipulator.
      */
     public function __construct(Connection $connection, TableManipulator $tableManipulator)
     {
