@@ -25,6 +25,7 @@ namespace MetaModels\AttributeGeoDistanceBundle\Migration;
 use Contao\CoreBundle\Migration\AbstractMigration;
 use Contao\CoreBundle\Migration\MigrationResult;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Schema\Column;
 use MetaModels\Helper\TableManipulator;
 
 /**
@@ -142,7 +143,15 @@ class AddCountryMigration extends AbstractMigration
      */
     private function fieldExists($strTableName, $strColumnName)
     {
-        $columns = $this->connection->getSchemaManager()->listTableColumns($strTableName);
+        /** @var Column[] $columns */
+        $columns = [];
+        // The schema manager return the column list with lowercase keys, wo got to use the real names.
+        \array_map(
+            function (Column $column) use (&$columns) {
+                $columns[$column->getName()] = $column;
+            },
+            $this->connection->getSchemaManager()->listTableColumns($strTableName)
+        );
 
         return isset($columns[$strColumnName]);
     }
