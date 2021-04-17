@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_geodistance.
  *
- * (c) 2012-2019 The MetaModels team.
+ * (c) 2012-2021 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,7 +12,7 @@
  *
  * @package    MetaModels/attribute_geodistance
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2019 The MetaModels team.
+ * @copyright  2012-2021 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_geodistance/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -37,14 +37,14 @@ class MetaModelsAttributeGeoDistanceBundleTest extends TestCase
     {
         $bundle = new MetaModelsAttributeGeoDistanceBundle();
 
-        $this->assertInstanceOf(MetaModelsAttributeGeoDistanceBundle::class, $bundle);
+        self::assertInstanceOf(MetaModelsAttributeGeoDistanceBundle::class, $bundle);
     }
 
     public function testReturnsTheContainerExtension()
     {
         $extension = (new MetaModelsAttributeGeoDistanceBundle())->getContainerExtension();
 
-        $this->assertInstanceOf(MetaModelsAttributeGeoDistanceExtension::class, $extension);
+        self::assertInstanceOf(MetaModelsAttributeGeoDistanceExtension::class, $extension);
     }
 
     /**
@@ -57,15 +57,19 @@ class MetaModelsAttributeGeoDistanceBundleTest extends TestCase
 
         $extension->load([], $container);
 
-        $this->assertInstanceOf(ComposerResource::class, $container->getResources()[0]);
-        $this->assertInstanceOf(FileResource::class, $container->getResources()[1]);
-        $this->assertSame(
-            \dirname(\dirname(__DIR__)) . '/src/Resources/config/attribute-settings.yml',
+        self::assertInstanceOf(FileResource::class, $container->getResources()[0]);
+        self::assertSame(
+            \dirname(__DIR__, 2) . '/src/Resources/config/attribute-settings.yml',
+            $container->getResources()[0]->getResource()
+        );
+        self::assertInstanceOf(FileResource::class, $container->getResources()[1]);
+        self::assertSame(
+            \dirname(__DIR__, 2) . '/src/Resources/config/listeners.yml',
             $container->getResources()[1]->getResource()
         );
-        $this->assertInstanceOf(FileResource::class, $container->getResources()[2]);
-        $this->assertSame(
-            \dirname(\dirname(__DIR__)) . '/src/Resources/config/listeners.yml',
+        self::assertInstanceOf(FileResource::class, $container->getResources()[2]);
+        self::assertSame(
+            \dirname(__DIR__, 2) . '/src/Resources/config/services.yml',
             $container->getResources()[2]->getResource()
         );
     }

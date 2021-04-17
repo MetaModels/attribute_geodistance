@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_geodistance.
  *
- * (c) 2012-2019 The MetaModels team.
+ * (c) 2012-2021 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,7 +12,7 @@
  *
  * @package    MetaModels/attribute_geodistance
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2019 The MetaModels team.
+ * @copyright  2012-2021 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_geodistance/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -53,6 +53,10 @@ class PluginTest extends TestCase
             )
             ->setReplace(['metamodelsattribute_geodistance']);
 
-        $this->assertArraySubset($plugin->getBundles($parser), [$bundleConfig]);
+        $bundles = $plugin->getBundles($parser);
+        self::assertCount(1, $bundles);
+        self::assertSame($bundleConfig->getName(), $bundles[0]->getName());
+        self::assertSame($bundleConfig->getReplace(), $bundles[0]->getReplace());
+        self::assertSame($bundleConfig->getLoadAfter(), $bundles[0]->getLoadAfter());
     }
 }
