@@ -23,6 +23,7 @@ namespace MetaModels\AttributeGeoDistanceBundle\Test\Migration;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\MySqlPlatform;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\AbstractSchemaManager;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
@@ -79,12 +80,43 @@ final class AddCountryMigrationTest extends TestCase
      */
     public function testRun(object $configuration): void
     {
-        $connection = $this->createMock(Connection::class);
-        $manager    = $this
+        $connection   = $this->createMock(Connection::class);
+        $queryBuilder = $this->createMock(QueryBuilder::class);
+        $manager      = $this
             ->getMockBuilder(AbstractSchemaManager::class)
             ->setConstructorArgs([$connection])
             ->onlyMethods(['tablesExist', 'listTableColumns', 'listTableDetails', 'alterTable'])
             ->getMockForAbstractClass();
+
+        $connection
+            ->expects($configuration->shouldRun ? self::once() : self::never())
+            ->method('createQueryBuilder')
+            ->willReturn($queryBuilder);
+
+        $queryBuilder
+            ->expects($configuration->shouldRun ? self::once() : self::never())
+            ->method('update')
+            ->with('tl_metamodel_attribute', 't')
+            ->willReturn($queryBuilder);
+        $queryBuilder
+            ->expects($configuration->shouldRun ? self::once() : self::never())
+            ->method('set')
+            ->with('t.countrymode', '"get"')
+            ->willReturn($queryBuilder);
+        $queryBuilder
+            ->expects($configuration->shouldRun ? self::once() : self::never())
+            ->method('where')
+            ->with('t.country_get != ""')
+            ->willReturn($queryBuilder);
+        $updateExecuted = false;
+        $queryBuilder
+            ->expects($configuration->shouldRun ? self::once() : self::never())
+            ->method('execute')
+            ->willReturnCallback(
+                function () use (&$updateExecuted) {
+                    $updateExecuted = true;
+                }
+            );
 
         $manager
             ->expects(self::once())
@@ -131,6 +163,7 @@ final class AddCountryMigrationTest extends TestCase
         $migration = new AddCountryMigration($connection);
         self::assertSame($configuration->shouldRun, $migration->shouldRun());
         self::assertNull($tableDiff);
+        self::assertFalse($updateExecuted);
 
         if (!$configuration->shouldRun) {
             return;
@@ -142,5 +175,6 @@ final class AddCountryMigrationTest extends TestCase
         self::assertSame('tl_metamodel_attribute', $tableDiff->name);
         self::assertCount(1, $tableDiff->addedColumns);
         self::assertCount(1, $tableDiff->changedColumns);
+        self::assertTrue($updateExecuted);
     }
 }

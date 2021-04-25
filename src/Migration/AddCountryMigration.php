@@ -99,6 +99,7 @@ final class AddCountryMigration extends AbstractMigration
     public function run(): MigrationResult
     {
         $this->alterTable();
+        $this->setCountryMode();
 
         return new MigrationResult(true, 'Adjusted table tl_metamodel_attribute with countrymode and country_get');
     }
@@ -157,6 +158,20 @@ final class AddCountryMigration extends AbstractMigration
         $columnDiff = new ColumnDiff('get_land', $changeColumn);
 
         $tableDiff->changedColumns[] = $columnDiff;
+    }
+
+    /**
+     * Set the country mode to get, if the country get is not empty.
+     *
+     * @return void
+     */
+    private function setCountryMode(): void
+    {
+        $this->connection->createQueryBuilder()
+            ->update('tl_metamodel_attribute', 't')
+            ->set('t.countrymode', '"get"')
+            ->where('t.country_get != ""')
+            ->execute();
     }
 
     /**
