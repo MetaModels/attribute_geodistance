@@ -89,32 +89,44 @@ final class AddCountryMigrationTest extends TestCase
             ->getMockForAbstractClass();
 
         $connection
-            ->expects($configuration->shouldRun ? self::once() : self::never())
+            ->expects($configuration->shouldRun ? self::exactly(2) : self::never())
             ->method('createQueryBuilder')
             ->willReturn($queryBuilder);
 
         $queryBuilder
-            ->expects($configuration->shouldRun ? self::once() : self::never())
+            ->expects($configuration->shouldRun ? self::exactly(2) : self::never())
             ->method('update')
-            ->with('tl_metamodel_attribute', 't')
+            ->withConsecutive(['tl_metamodel_attribute', 't'], ['tl_metamodel_attribute', 't'])
             ->willReturn($queryBuilder);
         $queryBuilder
-            ->expects($configuration->shouldRun ? self::once() : self::never())
+            ->expects($configuration->shouldRun ? self::exactly(2) : self::never())
             ->method('set')
-            ->with('t.countrymode', '"get"')
+            ->withConsecutive(['t.country_get', 'null'], ['t.countrymode', '"get"'])
             ->willReturn($queryBuilder);
         $queryBuilder
-            ->expects($configuration->shouldRun ? self::once() : self::never())
+            ->expects($configuration->shouldRun ? self::exactly(2) : self::never())
             ->method('where')
-            ->with('t.country_get != ""')
+            ->withConsecutive(['t.country_get = ""'], ['t.country_get != ""'])
             ->willReturn($queryBuilder);
-        $updateExecuted = false;
+        $queryBuilderExecuted             = 0;
+        $setCountryModeExecuted           = false;
+        $updateColumnDefaultValueExecuted = false;
         $queryBuilder
-            ->expects($configuration->shouldRun ? self::once() : self::never())
+            ->expects($configuration->shouldRun ? self::exactly(2) : self::never())
             ->method('execute')
             ->willReturnCallback(
-                function () use (&$updateExecuted) {
-                    $updateExecuted = true;
+                function () use (&$queryBuilderExecuted, &$setCountryModeExecuted, &$updateColumnDefaultValueExecuted) {
+                    $queryBuilderExecuted++;
+
+                    switch ($queryBuilderExecuted) {
+                        case 1:
+                            $updateColumnDefaultValueExecuted = true;
+                            break;
+                        case 2:
+                            $setCountryModeExecuted = true;
+                            break;
+                        default:
+                    }
                 }
             );
 
@@ -163,7 +175,9 @@ final class AddCountryMigrationTest extends TestCase
         $migration = new AddCountryMigration($connection);
         self::assertSame($configuration->shouldRun, $migration->shouldRun());
         self::assertNull($tableDiff);
-        self::assertFalse($updateExecuted);
+        self::assertSame(0, $queryBuilderExecuted);
+        self::assertFalse($updateColumnDefaultValueExecuted);
+        self::assertFalse($setCountryModeExecuted);
 
         if (!$configuration->shouldRun) {
             return;
@@ -175,6 +189,8 @@ final class AddCountryMigrationTest extends TestCase
         self::assertSame('tl_metamodel_attribute', $tableDiff->name);
         self::assertCount(1, $tableDiff->addedColumns);
         self::assertCount(1, $tableDiff->changedColumns);
-        self::assertTrue($updateExecuted);
+        self::assertSame(2, $queryBuilderExecuted);
+        self::assertTrue($updateColumnDefaultValueExecuted);
+        self::assertTrue($setCountryModeExecuted);
     }
 }
