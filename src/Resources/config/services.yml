@@ -2,6 +2,5 @@ services:
   MetaModels\AttributeGeoDistanceBundle\Migration\AddCountryMigration:
     arguments:
       - '@database_connection'
-      - '@metamodels.table_manipulator'
     tags:
       - name: contao.migration

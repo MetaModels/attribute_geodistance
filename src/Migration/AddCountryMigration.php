@@ -25,18 +25,21 @@ namespace MetaModels\AttributeGeoDistanceBundle\Migration;
 use Contao\CoreBundle\Migration\AbstractMigration;
 use Contao\CoreBundle\Migration\MigrationResult;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Doctrine\DBAL\Schema\Column;
-use MetaModels\Helper\TableManipulator;
+use Doctrine\DBAL\Schema\ColumnDiff;
+use Doctrine\DBAL\Schema\TableDiff;
+use Doctrine\DBAL\Types\StringType;
+use Doctrine\DBAL\Types\TextType;
 
 /**
  * Update the database table "tl_metamodel_attribute".
  * - Create the new column "countrymode".
- * - Create the new column "country_get".
+ * - Change the column "get_land => country_get".
  * - If exists entries in the old field "get_land",
- *   then switch the "countrymode" to the option "get"
- *   and store the data from the old field to the new field "country_get".
+ *   then switch the "countrymode" to the option "get".
  */
-class AddCountryMigration extends AbstractMigration
+final class AddCountryMigration extends AbstractMigration
 {
     /**
      * The database connection.
@@ -46,22 +49,13 @@ class AddCountryMigration extends AbstractMigration
     private $connection;
 
     /**
-     * Table manipulator.
-     *
-     * @var TableManipulator
-     */
-    protected $tableManipulator;
-
-    /**
      * Create a new instance.
      *
-     * @param Connection       $connection       The database connection.
-     * @param TableManipulator $tableManipulator The table manipulator.
+     * @param Connection $connection The database connection.
      */
-    public function __construct(Connection $connection, TableManipulator $tableManipulator)
+    public function __construct(Connection $connection)
     {
-        $this->connection       = $connection;
-        $this->tableManipulator = $tableManipulator;
+        $this->connection = $connection;
     }
 
     /**
@@ -104,44 +98,76 @@ class AddCountryMigration extends AbstractMigration
      */
     public function run(): MigrationResult
     {
-        if (!$this->fieldExists('tl_metamodel_attribute', 'country_get')) {
-            $this->tableManipulator->createColumn(
-                'tl_metamodel_attribute',
-                'country_get',
-                'text NULL'
-            );
-        }
-
-        if ($this->fieldExists('tl_metamodel_attribute', 'get_land')) {
-            $this->connection->createQueryBuilder()
-                ->update('tl_metamodel_attribute', 't')
-                ->set('t.country_get', 't.get_land')
-                ->execute();
-
-            $this->tableManipulator->dropColumn('tl_metamodel_attribute', 'get_land');
-        }
-
-        if (!$this->fieldExists('tl_metamodel_attribute', 'countrymode')) {
-            $this->tableManipulator->createColumn(
-                'tl_metamodel_attribute',
-                'countrymode',
-                'varchar(255) NOT NULL default \'\''
-            );
-        }
-
+        $this->alterTable();
 
         return new MigrationResult(true, 'Adjusted table tl_metamodel_attribute with countrymode and country_get');
     }
 
     /**
+     * Alter the table "tl_metamodel_attribute".
+     *
+     * @return void
+     */
+    private function alterTable(): void
+    {
+        $manager = $this->connection->getSchemaManager();
+        $table   = $manager->listTableDetails('tl_metamodel_attribute');
+
+        $tableDiff            = new TableDiff('tl_metamodel_attribute');
+        $tableDiff->fromTable = $table;
+
+        $this->addColumnCountryMode($tableDiff);
+        $this->changeColumnGetLand($tableDiff);
+
+        $manager->alterTable($tableDiff);
+    }
+
+    /**
+     * Add column "countrymode".
+     *
+     * @param TableDiff $tableDiff The table diff.
+     *
+     * @return void
+     */
+    private function addColumnCountryMode(TableDiff $tableDiff): void
+    {
+        $column = new Column('countrymode', new StringType());
+        $column
+            ->setLength(255)
+            ->setNotnull(true)
+            ->setDefault('');
+
+        $tableDiff->addedColumns[] = $column;
+    }
+
+    /**
+     * Change column "get_land => country_get".
+     *
+     * @param TableDiff $tableDiff The table diff.
+     *
+     * @return void
+     */
+    private function changeColumnGetLand(TableDiff $tableDiff): void
+    {
+        $changeColumn = new Column('country_get', new TextType());
+        $changeColumn
+            ->setLength(MySqlPlatform::LENGTH_LIMIT_TEXT)
+            ->setNotnull(false)
+            ->setDefault(null);
+        $columnDiff = new ColumnDiff('get_land', $changeColumn);
+
+        $tableDiff->changedColumns[] = $columnDiff;
+    }
+
+    /**
      * Check is a table column exists.
      *
-     * @param string $strTableName  Table name.
-     * @param string $strColumnName Column name.
+     * @param string $tableName  Table name.
+     * @param string $columnName Column name.
      *
      * @return bool
      */
-    private function fieldExists($strTableName, $strColumnName)
+    private function fieldExists(string $tableName, string $columnName): bool
     {
         /** @var Column[] $columns */
         $columns = [];
@@ -150,9 +176,9 @@ class AddCountryMigration extends AbstractMigration
             function (Column $column) use (&$columns) {
                 $columns[$column->getName()] = $column;
             },
-            $this->connection->getSchemaManager()->listTableColumns($strTableName)
+            $this->connection->getSchemaManager()->listTableColumns($tableName)
         );
 
-        return isset($columns[$strColumnName]);
+        return isset($columns[$columnName]);
     }
 }
