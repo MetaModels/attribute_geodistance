@@ -83,6 +83,10 @@ final class AddCountryMigration extends AbstractMigration
             return false;
         }
 
+        if (!$this->fieldExists('tl_metamodel_attribute', 'get_land')) {
+            return false;
+        }
+
         if (!$this->fieldExists('tl_metamodel_attribute', 'country_get')) {
             return true;
         }
