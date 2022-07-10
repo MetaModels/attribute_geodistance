@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_geodistance.
  *
- * (c) 2012-2019 The MetaModels team.
+ * (c) 2012-2022 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,7 +15,7 @@
  * @author     Sven Baumann <baumann.sv@gmail.com>
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Ingolf Steinhardt <info@e-spin.de>
- * @copyright  2012-2019 The MetaModels team.
+ * @copyright  2012-2022 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_geodistance/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -119,13 +119,14 @@ class GeoDistance extends BaseComplex
     /**
      * Run the geolocation and distance core function.
      *
-     * @param array $idList The list of id's
+     * @param array  $idList    The list of id's
+     * @param string $direction The direction for sorting. either 'ASC' or 'DESC', as in plain SQL.
      *
      * @return array The new list of id's
      *
      * @throws \RuntimeException If something is missing.
      */
-    protected function runGeodistance($idList)
+    protected function runGeodistance($idList, $direction)
     {
         // Get some settings.
         $getGeo  = $this->get('get_geo');
@@ -145,7 +146,7 @@ class GeoDistance extends BaseComplex
             throw new \RuntimeException('Missing geo parameter for geo location.');
         }
 
-        return $this->matchIdList($idList);
+        return $this->matchIdList($idList, $direction);
     }
 
     /**
@@ -158,8 +159,10 @@ class GeoDistance extends BaseComplex
             return $idList;
         }
 
+        $direction = 'DESC' === \strtoupper($strDirection) ? 'DESC' : 'ASC';
+
         try {
-            return $this->runGeodistance($idList);
+            return $this->runGeodistance($idList, $direction);
         } catch (\Exception $e) {
             self::$data[$this->get('id')] = [];
             return $idList;
@@ -169,11 +172,12 @@ class GeoDistance extends BaseComplex
     /**
      * Match the id list.
      *
-     * @param array $idList The list of ids.
+     * @param array  $idList    The list of ids.
+     * @param string $direction The direction for sorting. either 'ASC' or 'DESC', as in plain SQL.
      *
      * @return array
      */
-    private function matchIdList(array $idList)
+    private function matchIdList(array $idList, $direction)
     {
         $metaModel = $this->getMetaModel();
 
@@ -199,7 +203,7 @@ class GeoDistance extends BaseComplex
 
                 // Search for the geolocation attribute.
                 if ('geolocation' === $attribute->get('type')) {
-                    $idList = $this->doSearchForAttGeolocation($container, $idList);
+                    $idList = $this->doSearchForAttGeolocation($container, $idList, $direction);
                 }
             } elseif ('multi' === $this->get('datamode')) {
                 // Get the attributes.
@@ -208,7 +212,7 @@ class GeoDistance extends BaseComplex
 
                 // Search for two simple attributes.
                 $idList = $this
-                    ->doSearchForTwoSimpleAtt($container, $idList, $firstAttribute, $secondAttribute);
+                    ->doSearchForTwoSimpleAtt($container, $idList, $firstAttribute, $secondAttribute, $direction);
             }
         } catch (\Exception $e) {
             // Should be never happened, just in case.
@@ -224,12 +228,13 @@ class GeoDistance extends BaseComplex
      *
      * @param Container $container The container with all information.
      * @param array     $idList    A list with ids.
+     * @param string    $direction The direction for sorting. either 'ASC' or 'DESC', as in plain SQL.
      *
      * @return array A list with all sorted id's.
      *
      * @see https://www.movable-type.co.uk/scripts/latlong.html
      */
-    protected function doSearchForAttGeolocation($container, $idList)
+    protected function doSearchForAttGeolocation($container, $idList, $direction)
     {
         // Calculate distance, bearing and more between Latitude/Longitude points
         $distanceCalculation = HaversineSphericalDistance::getFormulaAsQueryPart(
@@ -245,11 +250,11 @@ class GeoDistance extends BaseComplex
         $attIdField    = $this->connection->quoteIdentifier('att_id');
         $builder       = $this->connection->createQueryBuilder();
         $builder
-            ->select($idField, $distanceCalculation . ' '. $itemDistField)
+            ->select($idField, $distanceCalculation . ' ' . $itemDistField)
             ->from($this->connection->quoteIdentifier('tl_metamodel_geolocation'))
             ->where($builder->expr()->in($idField, ':idList'))
             ->andWhere($builder->expr()->eq($attIdField, ':attributeID'))
-            ->orderBy($this->connection->quoteIdentifier($itemDistField))
+            ->orderBy($itemDistField, $direction)
             ->setParameter('idList', $idList, Connection::PARAM_STR_ARRAY)
             ->setParameter('attributeID', $this->getMetaModel()->getAttribute($this->get('single_attr_id'))->get('id'));
 
@@ -273,12 +278,13 @@ class GeoDistance extends BaseComplex
      * @param array      $idList        The list with the current ID's.
      * @param IAttribute $latAttribute  The attribute to filter on.
      * @param IAttribute $longAttribute The attribute to filter on.
+     * @param string     $direction     The direction for sorting. either 'ASC' or 'DESC', as in plain SQL.
      *
      * @return array A list with all sorted id's.
      *
      * @see https://www.movable-type.co.uk/scripts/latlong.html
      */
-    protected function doSearchForTwoSimpleAtt($container, $idList, $latAttribute, $longAttribute)
+    protected function doSearchForTwoSimpleAtt($container, $idList, $latAttribute, $longAttribute, $direction)
     {
         // Calculate distance, bearing and more between Latitude/Longitude points
         $distanceCalculation = HaversineSphericalDistance::getFormulaAsQueryPart(
@@ -296,7 +302,7 @@ class GeoDistance extends BaseComplex
             ->select($idField, $distanceCalculation . ' ' . $itemDistField)
             ->from($this->connection->quoteIdentifier($this->getMetaModel()->getTableName()))
             ->where($builder->expr()->in($idField, ':idList'))
-            ->orderBy($itemDistField)
+            ->orderBy($itemDistField, $direction)
             ->setParameter('idList', $idList, Connection::PARAM_STR_ARRAY);
 
         $statement = $builder->execute();
