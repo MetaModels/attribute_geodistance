@@ -260,10 +260,14 @@ class GeoDistance extends BaseComplex
 
         $statement = $builder->executeQuery();
 
+        if(!$statement->rowCount()) {
+            return $idList;
+        }
+
         $newIdList = [];
-        foreach ($statement->fetchAssociative() as $item) {
+        foreach ($statement->fetchAllAssociative() as $item) {
             $newIdList[]                             = $item['id'];
-            self::$data[$this->get('id')][$item->id] = $item['item_dist'];
+            self::$data[$this->get('id')][$item['id']] = $item['item_dist'];
         }
 
         $diff = \array_diff($idList, $newIdList);
@@ -304,13 +308,16 @@ class GeoDistance extends BaseComplex
             ->where($builder->expr()->in($idField, ':idList'))
             ->orderBy($itemDistField, $direction)
             ->setParameter('idList', $idList, Connection::PARAM_STR_ARRAY);
-
         $statement = $builder->executeQuery();
 
+        if(!$statement->rowCount()) {
+            return $idList;
+        }
+
         $newIdList = [];
-        foreach ($statement->fetchAssociative() as $item) {
-            $newIdList[]                             = $item['id'];
-            self::$data[$this->get('id')][$item->id] = $item['item_dist'];
+        foreach ($statement->fetchAllAssociative() as $item) {
+            $newIdList[]                               = $item['id'];
+            self::$data[$this->get('id')][$item['id']] = $item['item_dist'];
         }
 
         $diff = \array_diff($idList, $newIdList);
