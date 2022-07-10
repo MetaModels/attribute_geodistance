@@ -258,12 +258,12 @@ class GeoDistance extends BaseComplex
             ->setParameter('idList', $idList, Connection::PARAM_STR_ARRAY)
             ->setParameter('attributeID', $this->getMetaModel()->getAttribute($this->get('single_attr_id'))->get('id'));
 
-        $statement = $builder->execute();
+        $statement = $builder->executeQuery();
 
         $newIdList = [];
-        foreach ($statement->fetchAll(\PDO::FETCH_OBJ) as $item) {
-            $newIdList[]                             = $item->id;
-            self::$data[$this->get('id')][$item->id] = $item->item_dist;
+        foreach ($statement->fetchAssociative() as $item) {
+            $newIdList[]                             = $item['id'];
+            self::$data[$this->get('id')][$item->id] = $item['item_dist'];
         }
 
         $diff = \array_diff($idList, $newIdList);
@@ -305,12 +305,12 @@ class GeoDistance extends BaseComplex
             ->orderBy($itemDistField, $direction)
             ->setParameter('idList', $idList, Connection::PARAM_STR_ARRAY);
 
-        $statement = $builder->execute();
+        $statement = $builder->executeQuery();
 
         $newIdList = [];
-        foreach ($statement->fetchAll(\PDO::FETCH_OBJ) as $item) {
-            $newIdList[]                             = $item->id;
-            self::$data[$this->get('id')][$item->id] = $item->item_dist;
+        foreach ($statement->fetchAssociative() as $item) {
+            $newIdList[]                             = $item['id'];
+            self::$data[$this->get('id')][$item->id] = $item['item_dist'];
         }
 
         $diff = \array_diff($idList, $newIdList);
@@ -462,19 +462,19 @@ class GeoDistance extends BaseComplex
             ->setParameter('search', $address)
             ->setParameter('country', $country);
 
-        $statement = $builder->execute();
+        $statement = $builder->executeQuery();
 
         // If we have no data just return null.
         if (!$statement->rowCount()) {
             return null;
         }
 
-        $result = $statement->fetch(\PDO::FETCH_OBJ);
+        $result = $statement->fetchAssociative();
 
         // Build a new container.
         $container = new Container();
-        $container->setLatitude($result->geo_lat);
-        $container->setLongitude($result->geo_long);
+        $container->setLatitude($result['geo_lat']);
+        $container->setLongitude($result['geo_long']);
         $container->setSearchParam(
             \strtr(
                 $builder->getSQL(),
