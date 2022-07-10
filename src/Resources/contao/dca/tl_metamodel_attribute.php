@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_geodistance.
  *
- * (c) 2012-2019 The MetaModels team.
+ * (c) 2012-2022 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,7 +15,7 @@
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2012-2019 The MetaModels team.
+ * @copyright  2012-2022 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_geodistance/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -62,7 +62,7 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['countrymode'] = [
     'exclude'   => true,
     'inputType' => 'select',
     'options'   => ['none', 'preset', 'get'],
-    'reference' => $GLOBALS['TL_LANG']['tl_metamodel_attribute']['countrymode_options'],
+    'reference' => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['countrymode_options'],
     'eval'      => [
         'tl_class'       => 'clr w50 w50x',
         'doNotSaveEmpty' => true,
@@ -136,7 +136,7 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['datamode'] = [
     'exclude'   => true,
     'inputType' => 'select',
     'options'   => ['single', 'multi'],
-    'reference' => $GLOBALS['TL_LANG']['tl_metamodel_attribute']['datamode_options'],
+    'reference' => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['datamode_options'],
     'sql'       => 'varchar(255) NOT NULL default \'\'',
     'eval'      => [
         'doNotSaveEmpty'     => true,
