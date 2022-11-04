@@ -576,7 +576,7 @@ class GeoDistance extends BaseComplex
     {
         if (!array_key_exists($this->get('id'), self::$data)) {
             try {
-                $this->runGeodistance($idList);
+                $this->runGeodistance($idList, 'ASC');
             } catch (\Exception $e) {
                 self::$data[$this->get('id')] = [];
             }
