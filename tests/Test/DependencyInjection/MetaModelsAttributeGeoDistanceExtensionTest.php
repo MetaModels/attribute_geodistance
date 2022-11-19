@@ -12,6 +12,7 @@
  *
  * @package    MetaModels/attribute_geodistance
  * @author     Ingolf Steinhardt <info@e-spin.de>
+ * @author     Sven Baumann <baumann.sv@gmail.com>
  * @copyright  2012-2022 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_geodistance/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
@@ -23,6 +24,7 @@ use MetaModels\AttributeGeoDistanceBundle\Attribute\AttributeTypeFactory;
 use MetaModels\AttributeGeoDistanceBundle\DependencyInjection\MetaModelsAttributeGeoDistanceExtension;
 use MetaModels\AttributeGeoDistanceBundle\EventListener\AttributeListener;
 use MetaModels\AttributeGeoDistanceBundle\EventListener\LookUpServiceListener;
+use MetaModels\AttributeGeoDistanceBundle\Migration\AddCountryMigration;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -58,7 +60,7 @@ final class MetaModelsAttributeGeoDistanceExtensionTest extends TestCase
         $container = $this->getMockBuilder(ContainerBuilder::class)->getMock();
 
         $container
-            ->expects($this->exactly(3))
+            ->expects($this->exactly(4))
             ->method('setDefinition')
             ->withConsecutive(
                 [
@@ -95,6 +97,18 @@ final class MetaModelsAttributeGeoDistanceExtensionTest extends TestCase
                             $this->assertInstanceOf(Definition::class, $value);
                             $this->assertEquals(LookUpServiceListener::class, $value->getClass());
                             $this->assertCount(1, $value->getTag('kernel.event_listener'));
+
+                            return true;
+                        }
+                    )
+                ],
+                [
+                    AddCountryMigration::class,
+                    $this->callback(
+                        function ($value) {
+                            /** @var Definition $value */
+                            $this->assertInstanceOf(Definition::class, $value);
+                            $this->assertCount(1, $value->getTag('contao.migration'));
 
                             return true;
                         }
