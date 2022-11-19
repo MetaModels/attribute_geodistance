@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_geodistance.
  *
- * (c) 2012-2021 The MetaModels team.
+ * (c) 2012-2022 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,7 +12,7 @@
  *
  * @package    MetaModels/attribute_geodistance
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2021 The MetaModels team.
+ * @copyright  2012-2022 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_geodistance/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -144,13 +144,15 @@ final class AddCountryMigrationTest extends TestCase
 
         $listTableColumns = [
             'country_get' =>
-                (new Column('country_get', new TextType()))->setLength(MySqlPlatform::LENGTH_LIMIT_TEXT)->setNotnull(false)->setDefault(null)
+                (new Column('country_get', new TextType()))->setLength(MySqlPlatform::LENGTH_LIMIT_TEXT)->setNotnull(false)->setDefault(null),
+            'get_land' =>
+                (new Column('get_land', new TextType()))->setLength(MySqlPlatform::LENGTH_LIMIT_TEXT)->setNotnull(false)->setDefault(null)
         ];
         if ($configuration->shouldRun) {
             unset($listTableColumns['country_get']);
         }
         $manager
-            ->expects($configuration->requiredTablesExist ? self::once() : self::never())
+            ->expects($configuration->requiredTablesExist ? self::exactly(2) : self::never())
             ->method('listTableColumns')
             ->with('tl_metamodel_attribute')
             ->willReturn($listTableColumns);
@@ -168,7 +170,7 @@ final class AddCountryMigrationTest extends TestCase
             );
 
         $connection
-            ->expects($configuration->requiredTablesExist ? self::exactly($configuration->shouldRun ? 3 : 2) : self::once())
+            ->expects($configuration->requiredTablesExist ? self::exactly($configuration->shouldRun ? 4 : 3) : self::once())
             ->method('getSchemaManager')
             ->willReturn($manager);
 
