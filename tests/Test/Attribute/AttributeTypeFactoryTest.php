@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_geodistance.
  *
- * (c) 2012-2019 The MetaModels team.
+ * (c) 2012-2021 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,7 +13,7 @@
  * @package    MetaModels/attribute_geodistance
  * @author     Sven Baumann <baumann.sv@gmail.com>
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2012-2019 The MetaModels team.
+ * @copyright  2012-2021 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_geodistance/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -49,7 +49,7 @@ class AttributeTypeFactoryTest extends TestCase
         $connection       = $this->getMockBuilder(Connection::class)->setConstructorArgs([[], $driver])->getMock();
         $tableManipulator = new TableManipulator($connection, []);
 
-        $this->assertInstanceOf(AttributeTypeFactory::class, new AttributeTypeFactory($connection, $tableManipulator));
+        self::assertInstanceOf(AttributeTypeFactory::class, new AttributeTypeFactory($connection, $tableManipulator));
     }
 
     /**
@@ -61,7 +61,7 @@ class AttributeTypeFactoryTest extends TestCase
     {
         $factory = $this->mockFactory();
 
-        $this->assertSame('geodistance', $factory->getTypeName());
+        self::assertSame('geodistance', $factory->getTypeName());
     }
 
     /**
@@ -73,7 +73,7 @@ class AttributeTypeFactoryTest extends TestCase
     {
         $factory = $this->mockFactory();
 
-        $this->assertSame('bundles/metamodelsattributegeodistance/image/numeric.png', $factory->getTypeIcon());
+        self::assertSame('bundles/metamodelsattributegeodistance/image/geodistance.png', $factory->getTypeIcon());
     }
 
     /**
@@ -86,7 +86,7 @@ class AttributeTypeFactoryTest extends TestCase
         $factory   = $this->mockFactory();
         $metaModel = $this->getMockForAbstractClass(IMetaModel::class);
 
-        $this->assertInstanceOf(GeoDistance::class, $factory->createInstance([], $metaModel));
+        self::assertInstanceOf(GeoDistance::class, $factory->createInstance([], $metaModel));
     }
 
     /**
@@ -101,8 +101,6 @@ class AttributeTypeFactoryTest extends TestCase
         $tableManipulator = new TableManipulator($connection, []);
         $adapter          = $this->getMockBuilder(Adapter::class)->disableOriginalConstructor()->getMock();
 
-        $factory = new AttributeTypeFactory($connection, $tableManipulator, $adapter);
-
-        return $factory;
+        return new AttributeTypeFactory($connection, $tableManipulator, $adapter);
     }
 }
