@@ -45,7 +45,7 @@ class AttributeTypeFactory extends AbstractSimpleAttributeTypeFactory
      *
      * @var Adapter|null
      */
-    private ?Adapter $input;
+    private ?Adapter $input = null;
 
     /**
      * {@inheritDoc}
