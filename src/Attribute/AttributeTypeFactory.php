@@ -34,7 +34,7 @@ use MetaModels\Helper\TableManipulator;
 class AttributeTypeFactory extends AbstractSimpleAttributeTypeFactory
 {
     /**
-     * The input provider.
+     * The input framework.
      *
      * @var ContaoFramework
      */
@@ -53,7 +53,7 @@ class AttributeTypeFactory extends AbstractSimpleAttributeTypeFactory
     public function __construct(
         Connection $connection,
         TableManipulator $tableManipulator,
-        ContaoFramework $framework = null
+        ContaoFramework $framework
     )
     {
         parent::__construct($connection, $tableManipulator);
