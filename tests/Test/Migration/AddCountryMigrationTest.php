@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_geodistance.
  *
- * (c) 2012-2022 The MetaModels team.
+ * (c) 2012-2024 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,7 +12,8 @@
  *
  * @package    MetaModels/attribute_geodistance
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2022 The MetaModels team.
+ * @author     Ingolf Steinhardt <info@e-spin.de>
+ * @copyright  2012-20234 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_geodistance/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -22,6 +23,7 @@ declare(strict_types=1);
 namespace MetaModels\AttributeGeoDistanceBundle\Test\Migration;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\AbstractSchemaManager;
@@ -77,14 +79,20 @@ final class AddCountryMigrationTest extends TestCase
 
     /**
      * @dataProvider runConfiguration
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @SuppressWarnings(PHPMD.LongVariable)
      */
     public function testRun(object $configuration): void
     {
         $connection   = $this->createMock(Connection::class);
         $queryBuilder = $this->createMock(QueryBuilder::class);
+        $plattform    = $this->getMockBuilder(AbstractPlatform::class)->disableOriginalConstructor()->getMock();
         $manager      = $this
             ->getMockBuilder(AbstractSchemaManager::class)
-            ->setConstructorArgs([$connection])
+            ->setConstructorArgs([$connection, $plattform])
             ->onlyMethods(['tablesExist', 'listTableColumns', 'listTableDetails', 'alterTable'])
             ->getMockForAbstractClass();
 
@@ -144,9 +152,13 @@ final class AddCountryMigrationTest extends TestCase
 
         $listTableColumns = [
             'country_get' =>
-                (new Column('country_get', new TextType()))->setLength(MySqlPlatform::LENGTH_LIMIT_TEXT)->setNotnull(false)->setDefault(null),
-            'get_land' =>
-                (new Column('get_land', new TextType()))->setLength(MySqlPlatform::LENGTH_LIMIT_TEXT)->setNotnull(false)->setDefault(null)
+                (new Column('country_get', new TextType()))->setLength(MySqlPlatform::LENGTH_LIMIT_TEXT)->setNotnull(
+                    false
+                )->setDefault(null),
+            'get_land'    =>
+                (new Column('get_land', new TextType()))->setLength(MySqlPlatform::LENGTH_LIMIT_TEXT)
+                    ->setNotnull(false)
+                    ->setDefault(null)
         ];
         if ($configuration->shouldRun) {
             unset($listTableColumns['country_get']);
@@ -170,7 +182,9 @@ final class AddCountryMigrationTest extends TestCase
             );
 
         $connection
-            ->expects($configuration->requiredTablesExist ? self::exactly($configuration->shouldRun ? 4 : 3) : self::once())
+            ->expects(
+                $configuration->requiredTablesExist ? self::exactly($configuration->shouldRun ? 4 : 3) : self::once()
+            )
             ->method('getSchemaManager')
             ->willReturn($manager);
 
@@ -187,8 +201,11 @@ final class AddCountryMigrationTest extends TestCase
 
         $migrationResult = $migration->run();
         self::assertTrue($migrationResult->isSuccessful());
-        self::assertSame('Adjusted table tl_metamodel_attribute with countrymode and country_get', $migrationResult->getMessage());
-        self::assertSame('tl_metamodel_attribute', $tableDiff->name);
+        self::assertSame(
+            'Adjusted table tl_metamodel_attribute with countrymode and country_get',
+            $migrationResult->getMessage()
+        );
+        self::assertSame('tl_metamodel_attribute', $tableDiff->getOldTable());
         self::assertCount(1, $tableDiff->addedColumns);
         self::assertCount(1, $tableDiff->changedColumns);
         self::assertSame(2, $queryBuilderExecuted);

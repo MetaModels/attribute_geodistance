@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_geodistance.
  *
- * (c) 2012-2022 The MetaModels team.
+ * (c) 2012-2024 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,7 +15,7 @@
  * @author     Sven Baumann <baumann.sv@gmail.com>
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
  * @author     Ingolf Steinhardt <info@e-spin.de>
- * @copyright  2012-2022 The MetaModels team.
+ * @copyright  2012-2024 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_geodistance/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -26,6 +26,7 @@ use Contao\CoreBundle\Framework\Adapter;
 use Contao\Input;
 use Contao\StringUtil;
 use Contao\System;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use MetaModels\Attribute\BaseComplex;
 use MetaModels\Attribute\IAttribute;
@@ -37,6 +38,9 @@ use MetaModels\IMetaModel;
 
 /**
  * This is the MetaModelAttribute class for handling geodistance fields.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class GeoDistance extends BaseComplex
 {
@@ -45,21 +49,21 @@ class GeoDistance extends BaseComplex
      *
      * @var Connection
      */
-    private $connection;
+    private Connection $connection;
 
     /**
      * The table manipulator.
      *
      * @var TableManipulator
      */
-    private $tableManipulator;
+    private TableManipulator $tableManipulator;
 
     /**
      * The input provider.
      *
      * @var Adapter
      */
-    private $input;
+    private Adapter $input;
 
     /**
      * Instantiate an MetaModel attribute.
@@ -86,13 +90,28 @@ class GeoDistance extends BaseComplex
 
         if (null === $connection) {
             // @codingStandardsIgnoreStart
-            @\trigger_error(
+            @trigger_error(
                 'Connection is missing. It has to be passed in the constructor. Fallback will be dropped.',
                 E_USER_DEPRECATED
             );
             // @codingStandardsIgnoreEnd
             $connection = System::getContainer()->get('database_connection');
+            assert($connection instanceof Connection);
         }
+        $this->connection = $connection;
+
+        if (null === $tableManipulator) {
+            // @codingStandardsIgnoreStart
+            @trigger_error(
+                'Table manipulator is missing. It has to be passed in the constructor. Fallback will be dropped.',
+                E_USER_DEPRECATED
+            );
+            // @codingStandardsIgnoreEnd
+
+            $tableManipulator = System::getContainer()->get('metamodels.table_manipulator');
+            assert($tableManipulator instanceof TableManipulator);
+        }
+        $this->tableManipulator = $tableManipulator;
 
         if (null === $input) {
             // @codingStandardsIgnoreStart
@@ -101,16 +120,14 @@ class GeoDistance extends BaseComplex
                 E_USER_DEPRECATED
             );
             // @codingStandardsIgnoreEnd
-            $input = System::getContainer()->get('contao.framework')->getAdapter(Input::class);
+            $input = System::getContainer()->get('contao.framework')?->getAdapter(Input::class);
+            assert($input instanceof Adapter);
         }
-
-        $this->connection       = $connection;
-        $this->tableManipulator = $tableManipulator;
-        $this->input            = $input;
+        $this->input = $input;
     }
 
     /**
-     * A internal list with values.
+     * An internal list with values.
      *
      * @var array
      */
@@ -177,7 +194,7 @@ class GeoDistance extends BaseComplex
      *
      * @return array
      */
-    private function matchIdList(array $idList, $direction)
+    private function matchIdList(array $idList, string $direction): array
     {
         $metaModel = $this->getMetaModel();
 
@@ -250,17 +267,17 @@ class GeoDistance extends BaseComplex
         $attIdField    = $this->connection->quoteIdentifier('att_id');
         $builder       = $this->connection->createQueryBuilder();
         $builder
-            ->select($idField, $distanceCalculation . ' ' . $itemDistField)
+            ->select($idField . ', ' . $distanceCalculation . ' ' . $itemDistField)
             ->from($this->connection->quoteIdentifier('tl_metamodel_geolocation'))
             ->where($builder->expr()->in($idField, ':idList'))
             ->andWhere($builder->expr()->eq($attIdField, ':attributeID'))
             ->orderBy($itemDistField, $direction)
-            ->setParameter('idList', $idList, Connection::PARAM_STR_ARRAY)
+            ->setParameter('idList', $idList, ArrayParameterType::STRING)
             ->setParameter('attributeID', $this->getMetaModel()->getAttribute($this->get('single_attr_id'))->get('id'));
 
         $statement = $builder->executeQuery();
 
-        if(!$statement->rowCount()) {
+        if (!$statement->rowCount()) {
             return $idList;
         }
 
@@ -303,14 +320,14 @@ class GeoDistance extends BaseComplex
         $itemDistField = $this->connection->quoteIdentifier('item_dist');
         $builder       = $this->connection->createQueryBuilder();
         $builder
-            ->select($idField, $distanceCalculation . ' ' . $itemDistField)
+            ->select($idField . ', ' . $distanceCalculation . ' ' . $itemDistField)
             ->from($this->connection->quoteIdentifier($this->getMetaModel()->getTableName()))
             ->where($builder->expr()->in($idField, ':idList'))
             ->orderBy($itemDistField, $direction)
-            ->setParameter('idList', $idList, Connection::PARAM_STR_ARRAY);
+            ->setParameter('idList', $idList, ArrayParameterType::STRING);
         $statement = $builder->executeQuery();
 
-        if(!$statement->rowCount()) {
+        if (!$statement->rowCount()) {
             return $idList;
         }
 
@@ -476,7 +493,9 @@ class GeoDistance extends BaseComplex
             return null;
         }
 
-        $result = $statement->fetchAssociative();
+        if (false === $result = $statement->fetchAssociative()) {
+            return null;
+        }
 
         // Build a new container.
         $container = new Container();
@@ -574,23 +593,23 @@ class GeoDistance extends BaseComplex
     /**
      * This method is called to retrieve the data for certain items from the database.
      *
-     * @param string[] $idList The ids of the items to retrieve.
+     * @param string[] $arrIds The ids of the items to retrieve.
      *
      * @return mixed[] The nature of the resulting array is a mapping from id => "native data" where
      *                 the definition of "native data" is only of relevance to the given item.
      */
-    public function getDataFor($idList)
+    public function getDataFor($arrIds)
     {
         if (!array_key_exists($this->get('id'), self::$data)) {
             try {
-                $this->runGeodistance($idList, 'ASC');
+                $this->runGeodistance($arrIds, 'ASC');
             } catch (\Exception $e) {
                 self::$data[$this->get('id')] = [];
             }
         }
 
         $return = [];
-        foreach ($idList as $id) {
+        foreach ($arrIds as $id) {
             if (isset(self::$data[$this->get('id')][$id])) {
                 $return[$id] = self::$data[$this->get('id')][$id];
             } else {
@@ -604,13 +623,13 @@ class GeoDistance extends BaseComplex
     /**
      * Remove values for items.
      *
-     * @param string[] $idList The ids of the items to retrieve.
+     * @param string[] $arrIds The ids of the items to retrieve.
      *
      * @return void
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function unsetDataFor($idList)
+    public function unsetDataFor($arrIds)
     {
         // No-op.
     }

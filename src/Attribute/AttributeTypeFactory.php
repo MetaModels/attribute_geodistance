@@ -54,8 +54,7 @@ class AttributeTypeFactory extends AbstractSimpleAttributeTypeFactory
         Connection $connection,
         TableManipulator $tableManipulator,
         ContaoFramework $framework
-    )
-    {
+    ) {
         parent::__construct($connection, $tableManipulator);
 
         $this->framework = $framework;

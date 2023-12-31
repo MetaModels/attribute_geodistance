@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_geodistance.
  *
- * (c) 2012-2022 The MetaModels team.
+ * (c) 2012-2023 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -14,7 +14,7 @@
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
  * @author     Stefan Heimes <stefan_heimes@hotmail.com>
- * @copyright  2012-2022 The MetaModels team.
+ * @copyright  2012-2023 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_geodistance/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -47,7 +47,7 @@ final class AddCountryMigration extends AbstractMigration
      *
      * @var Connection
      */
-    private $connection;
+    private Connection $connection;
 
     /**
      * Create a new instance.
@@ -78,7 +78,7 @@ final class AddCountryMigration extends AbstractMigration
      */
     public function shouldRun(): bool
     {
-        $schemaManager = $this->connection->getSchemaManager();
+        $schemaManager = $this->connection->createSchemaManager();
 
         if (!$schemaManager->tablesExist(['tl_metamodel', 'tl_metamodel_attribute'])) {
             return false;
@@ -117,8 +117,8 @@ final class AddCountryMigration extends AbstractMigration
      */
     private function alterTable(): void
     {
-        $manager = $this->connection->getSchemaManager();
-        $table   = $manager->listTableDetails('tl_metamodel_attribute');
+        $manager = $this->connection->createSchemaManager();
+        $table   = $manager->introspectTable('tl_metamodel_attribute');
 
         $tableDiff            = new TableDiff('tl_metamodel_attribute');
         $tableDiff->fromTable = $table;
@@ -177,7 +177,7 @@ final class AddCountryMigration extends AbstractMigration
             ->update('tl_metamodel_attribute', 't')
             ->set('t.country_get', 'null')
             ->where('t.country_get = ""')
-            ->execute();
+            ->executeQuery();
     }
 
     /**
@@ -191,7 +191,7 @@ final class AddCountryMigration extends AbstractMigration
             ->update('tl_metamodel_attribute', 't')
             ->set('t.countrymode', '"get"')
             ->where('t.country_get != ""')
-            ->execute();
+            ->executeQuery();
     }
 
     /**
@@ -208,10 +208,10 @@ final class AddCountryMigration extends AbstractMigration
         $columns = [];
         // The schema manager return the column list with lowercase keys, wo got to use the real names.
         \array_map(
-            function (Column $column) use (&$columns) {
+            static function (Column $column) use (&$columns) {
                 $columns[$column->getName()] = $column;
             },
-            $this->connection->getSchemaManager()->listTableColumns($tableName)
+            $this->connection->createSchemaManager()->listTableColumns($tableName)
         );
 
         return isset($columns[$columnName]);
