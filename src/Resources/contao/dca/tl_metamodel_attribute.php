@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_geodistance.
  *
- * (c) 2012-2022 The MetaModels team.
+ * (c) 2012-2024 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,7 +15,7 @@
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
  * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2012-2022 The MetaModels team.
+ * @copyright  2012-2024 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_geodistance/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -107,7 +107,7 @@ if (count((array) $GLOBALS['METAMODELS']['filters']['perimetersearch'])) {
             'helpwizard'   => true,
             'columnFields' => [
                 'lookupservice' => [
-                    'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['lookupservice'],
+                    'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['lookupservice_service'],
                     'exclude'   => true,
                     'inputType' => 'select',
                     'eval'      => [
@@ -118,7 +118,7 @@ if (count((array) $GLOBALS['METAMODELS']['filters']['perimetersearch'])) {
                     ]
                 ],
                 'apiToken' => [
-                    'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['lookupservice']['api_token'],
+                    'label'     => &$GLOBALS['TL_LANG']['tl_metamodel_attribute']['lookupservice_api_token'],
                     'exclude'   => true,
                     'inputType' => 'text',
                     'eval'      => [
