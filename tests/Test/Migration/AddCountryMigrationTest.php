@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace MetaModels\AttributeGeoDistanceBundle\Test\Migration;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -152,11 +153,13 @@ final class AddCountryMigrationTest extends TestCase
 
         $listTableColumns = [
             'country_get' =>
-                (new Column('country_get', new TextType()))->setLength(MySqlPlatform::LENGTH_LIMIT_TEXT)->setNotnull(
-                    false
-                )->setDefault(null),
+                (new Column('country_get', new TextType()))
+                    ->setLength(AbstractMySQLPlatform::LENGTH_LIMIT_TEXT)
+                    ->setNotnull(false)
+                    ->setDefault(null),
             'get_land'    =>
-                (new Column('get_land', new TextType()))->setLength(MySqlPlatform::LENGTH_LIMIT_TEXT)
+                (new Column('get_land', new TextType()))
+                    ->setLength(AbstractMySQLPlatform::LENGTH_LIMIT_TEXT)
                     ->setNotnull(false)
                     ->setDefault(null)
         ];

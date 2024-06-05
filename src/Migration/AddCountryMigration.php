@@ -26,12 +26,17 @@ namespace MetaModels\AttributeGeoDistanceBundle\Migration;
 use Contao\CoreBundle\Migration\AbstractMigration;
 use Contao\CoreBundle\Migration\MigrationResult;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\ColumnDiff;
+use Doctrine\DBAL\Schema\SchemaException;
 use Doctrine\DBAL\Schema\TableDiff;
 use Doctrine\DBAL\Types\StringType;
 use Doctrine\DBAL\Types\TextType;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 
 /**
  * Update the database table "tl_metamodel_attribute".
@@ -120,7 +125,9 @@ final class AddCountryMigration extends AbstractMigration
         $manager = $this->connection->createSchemaManager();
         $table   = $manager->introspectTable('tl_metamodel_attribute');
 
+        /** @psalm-suppress InternalMethod - Class TableDiff is internal, but this just works fine. */
         $tableDiff            = new TableDiff('tl_metamodel_attribute');
+        /** @psalm-suppress InternalProperty - ToDo: Duplicate Code? Constructor set the fromTable. */
         $tableDiff->fromTable = $table;
 
         $this->addColumnCountryMode($tableDiff);
@@ -135,15 +142,18 @@ final class AddCountryMigration extends AbstractMigration
      * @param TableDiff $tableDiff The table diff.
      *
      * @return void
+     *
+     * @throws Exception
      */
     private function addColumnCountryMode(TableDiff $tableDiff): void
     {
-        $column = new Column('countrymode', new StringType());
+        $column = new Column('countrymode', Type::getType(Types::STRING));
         $column
             ->setLength(255)
             ->setNotnull(true)
             ->setDefault('');
 
+        /** @psalm-suppress InternalProperty - We want to add some data but there is no set or add. */
         $tableDiff->addedColumns[] = $column;
     }
 
@@ -153,16 +163,21 @@ final class AddCountryMigration extends AbstractMigration
      * @param TableDiff $tableDiff The table diff.
      *
      * @return void
+     *
+     * @throws SchemaException
+     * @throws Exception
      */
     private function changeColumnGetLand(TableDiff $tableDiff): void
     {
-        $changeColumn = new Column('country_get', new TextType());
+        $changeColumn = new Column('country_get', Type::getType(Types::TEXT));
         $changeColumn
-            ->setLength(MySqlPlatform::LENGTH_LIMIT_TEXT)
+            ->setLength(AbstractMySQLPlatform::LENGTH_LIMIT_TEXT)
             ->setNotnull(false)
             ->setDefault(null);
+        /** @psalm-suppress InternalMethod - Class ColumnDiff is internal, but this just works fine. */
         $columnDiff = new ColumnDiff('get_land', $changeColumn);
 
+        /** @psalm-suppress InternalProperty - We want to add some data but there is no set or add. */
         $tableDiff->changedColumns[] = $columnDiff;
     }
 
@@ -170,6 +185,8 @@ final class AddCountryMigration extends AbstractMigration
      * Update column "country_get" default value.
      *
      * @return void
+     *
+     * @throws Exception
      */
     private function updateColumnDefaultValue(): void
     {

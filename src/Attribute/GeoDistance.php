@@ -28,6 +28,7 @@ use Contao\StringUtil;
 use Contao\System;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
 use MetaModels\Attribute\BaseComplex;
 use MetaModels\Attribute\IAttribute;
 use MetaModels\FilterPerimetersearchBundle\FilterHelper\Container;
@@ -155,6 +156,7 @@ class GeoDistance extends BaseComplex
         }
 
         // Get the params.
+        /** @psalm-suppress InternalMethod - Class ContaoFramework is internal, not the getAdapter() method. */
         $geo  = $this->input->get($getGeo);
         $land = $this->getCountryInformation();
 
@@ -193,6 +195,8 @@ class GeoDistance extends BaseComplex
      * @param string $direction The direction for sorting. either 'ASC' or 'DESC', as in plain SQL.
      *
      * @return array
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) We are at 10 and 10 is allowed.
      */
     private function matchIdList(array $idList, string $direction): array
     {
@@ -202,14 +206,13 @@ class GeoDistance extends BaseComplex
         $getGeo = $this->get('get_geo');
 
         // Get the params.
+        /** @psalm-suppress InternalMethod - Class ContaoFramework is internal, not the getAdapter() method. */
         $geo  = $this->input->get($getGeo);
         $land = $this->getCountryInformation();
 
         try {
             // Get the geo data.
-            $container = $this->lookupGeo($geo, $land);
-
-            // Okay we cant find a entry. So search for nothing.
+            $container = $this->lookupGeo($geo, $land ?? '');
             if ((null === $container) || $container->hasError()) {
                 return $idList;
             }
@@ -219,7 +222,7 @@ class GeoDistance extends BaseComplex
                 $attribute = $metaModel->getAttribute($this->get('single_attr_id'));
 
                 // Search for the geolocation attribute.
-                if ('geolocation' === $attribute->get('type')) {
+                if ($attribute !== null && 'geolocation' === $attribute->get('type')) {
                     $idList = $this->doSearchForAttGeolocation($container, $idList, $direction);
                 }
             } elseif ('multi' === $this->get('datamode')) {
@@ -228,8 +231,15 @@ class GeoDistance extends BaseComplex
                 $secondAttribute = $metaModel->getAttribute($this->get('second_attr_id'));
 
                 // Search for two simple attributes.
-                $idList = $this
-                    ->doSearchForTwoSimpleAtt($container, $idList, $firstAttribute, $secondAttribute, $direction);
+                if ($firstAttribute !== null && $secondAttribute !== null) {
+                    $idList = $this->doSearchForTwoSimpleAtt(
+                        $container,
+                        $idList,
+                        $firstAttribute,
+                        $secondAttribute,
+                        $direction
+                    );
+                }
             }
         } catch (\Exception $e) {
             // Should be never happened, just in case.
@@ -244,10 +254,12 @@ class GeoDistance extends BaseComplex
      * Run the search for the complex attribute geolocation.
      *
      * @param Container $container The container with all information.
-     * @param array     $idList    A list with ids.
-     * @param string    $direction The direction for sorting. either 'ASC' or 'DESC', as in plain SQL.
+     * @param array $idList A list with ids.
+     * @param string $direction The direction for sorting. either 'ASC' or 'DESC', as in plain SQL.
      *
      * @return array A list with all sorted id's.
+     *
+     * @throws Exception
      *
      * @see https://www.movable-type.co.uk/scripts/latlong.html
      */
@@ -262,6 +274,12 @@ class GeoDistance extends BaseComplex
             2
         );
 
+        // Check if the attribute is still there. If not just return the data as it is.
+        $attribute = $this->getMetaModel()->getAttribute($this->get('single_attr_id'));
+        if ($attribute === null) {
+            return $idList;
+        }
+
         $idField       = $this->connection->quoteIdentifier('id');
         $itemDistField = $this->connection->quoteIdentifier('item_dist');
         $attIdField    = $this->connection->quoteIdentifier('att_id');
@@ -273,7 +291,7 @@ class GeoDistance extends BaseComplex
             ->andWhere($builder->expr()->eq($attIdField, ':attributeID'))
             ->orderBy($itemDistField, $direction)
             ->setParameter('idList', $idList, ArrayParameterType::STRING)
-            ->setParameter('attributeID', $this->getMetaModel()->getAttribute($this->get('single_attr_id'))->get('id'));
+            ->setParameter('attributeID', $attribute->get('id'));
 
         $statement = $builder->executeQuery();
 
@@ -446,13 +464,13 @@ class GeoDistance extends BaseComplex
     /**
      * Add data to the cache.
      *
-     * @param string    $address The address which where use for the search.
-     * @param string    $country The country.
-     * @param Container $result  The container with all information.
+     * @param string $address The address which where use for the search.
+     * @param string $country The country.
+     * @param Container $result The container with all information.
      *
      * @return void
      *
-     * @throws \Doctrine\DBAL\DBALException When insert fails.
+     * @throws Exception When the insert failed.
      */
     protected function addToCache($address, $country, $result)
     {
@@ -581,7 +599,7 @@ class GeoDistance extends BaseComplex
      * @param bool          $usedOnly Determines if only "used" values shall be returned.
      * @param array|null    $arrCount Array for the counted values.
      *
-     * @return array All options matching the given conditions as name => value.
+     * @return array<string, mixed> All options matching the given conditions as name => value.
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
@@ -595,8 +613,8 @@ class GeoDistance extends BaseComplex
      *
      * @param string[] $arrIds The ids of the items to retrieve.
      *
-     * @return mixed[] The nature of the resulting array is a mapping from id => "native data" where
-     *                 the definition of "native data" is only of relevance to the given item.
+     * @return array<string, mixed> The nature of the resulting array is a mapping from id => "native data" where
+     *                              the definition of "native data" is only of relevance to the given item.
      */
     public function getDataFor($arrIds)
     {
@@ -645,6 +663,7 @@ class GeoDistance extends BaseComplex
         $country = null;
 
         if (('get' === $this->get('countrymode')) && $this->get('country_get')) {
+            /** @psalm-suppress InternalMethod - Class ContaoFramework is internal, not the getAdapter() method. */
             $getValue = $this->input->get($this->get('country_get')) ?: $this->input->post($this->get('country_get'));
             $getValue = \trim($getValue);
             if (!empty($getValue)) {
