@@ -30,6 +30,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class LookUpServiceListener
 {
     use BaseTrait;
+
     /**
      * The translator.
      *
@@ -61,7 +62,8 @@ class LookUpServiceListener
     {
         // Check the context.
         $allowedProperties = ['lookupservice'];
-        if (!$this->isAllowedProperty($event, 'tl_metamodel_attribute', $allowedProperties)
+        if (
+            !$this->isAllowedProperty($event, 'tl_metamodel_attribute', $allowedProperties)
             || ('lookupservice' !== $event->getSubPropertyName())
         ) {
             return;

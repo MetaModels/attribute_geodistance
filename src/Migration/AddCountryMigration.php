@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_geodistance.
  *
- * (c) 2012-2022 The MetaModels team.
+ * (c) 2012-2024 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -14,7 +14,7 @@
  * @author     Ingolf Steinhardt <info@e-spin.de>
  * @author     Sven Baumann <baumann.sv@gmail.com>
  * @author     Stefan Heimes <stefan_heimes@hotmail.com>
- * @copyright  2012-2022 The MetaModels team.
+ * @copyright  2012-2024 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_geodistance/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -26,12 +26,17 @@ namespace MetaModels\AttributeGeoDistanceBundle\Migration;
 use Contao\CoreBundle\Migration\AbstractMigration;
 use Contao\CoreBundle\Migration\MigrationResult;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
+use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\ColumnDiff;
+use Doctrine\DBAL\Schema\SchemaException;
 use Doctrine\DBAL\Schema\TableDiff;
 use Doctrine\DBAL\Types\StringType;
 use Doctrine\DBAL\Types\TextType;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 
 /**
  * Update the database table "tl_metamodel_attribute".
@@ -47,7 +52,7 @@ final class AddCountryMigration extends AbstractMigration
      *
      * @var Connection
      */
-    private $connection;
+    private Connection $connection;
 
     /**
      * Create a new instance.
@@ -78,7 +83,7 @@ final class AddCountryMigration extends AbstractMigration
      */
     public function shouldRun(): bool
     {
-        $schemaManager = $this->connection->getSchemaManager();
+        $schemaManager = $this->connection->createSchemaManager();
 
         if (!$schemaManager->tablesExist(['tl_metamodel', 'tl_metamodel_attribute'])) {
             return false;
@@ -117,10 +122,12 @@ final class AddCountryMigration extends AbstractMigration
      */
     private function alterTable(): void
     {
-        $manager = $this->connection->getSchemaManager();
-        $table   = $manager->listTableDetails('tl_metamodel_attribute');
+        $manager = $this->connection->createSchemaManager();
+        $table   = $manager->introspectTable('tl_metamodel_attribute');
 
+        /** @psalm-suppress InternalMethod - Class TableDiff is internal, but this just works fine. */
         $tableDiff            = new TableDiff('tl_metamodel_attribute');
+        /** @psalm-suppress InternalProperty - ToDo: Duplicate Code? Constructor set the fromTable. */
         $tableDiff->fromTable = $table;
 
         $this->addColumnCountryMode($tableDiff);
@@ -135,15 +142,18 @@ final class AddCountryMigration extends AbstractMigration
      * @param TableDiff $tableDiff The table diff.
      *
      * @return void
+     *
+     * @throws Exception
      */
     private function addColumnCountryMode(TableDiff $tableDiff): void
     {
-        $column = new Column('countrymode', new StringType());
+        $column = new Column('countrymode', Type::getType(Types::STRING));
         $column
             ->setLength(255)
             ->setNotnull(true)
             ->setDefault('');
 
+        /** @psalm-suppress InternalProperty - We want to add some data but there is no set or add. */
         $tableDiff->addedColumns[] = $column;
     }
 
@@ -153,16 +163,21 @@ final class AddCountryMigration extends AbstractMigration
      * @param TableDiff $tableDiff The table diff.
      *
      * @return void
+     *
+     * @throws SchemaException
+     * @throws Exception
      */
     private function changeColumnGetLand(TableDiff $tableDiff): void
     {
-        $changeColumn = new Column('country_get', new TextType());
+        $changeColumn = new Column('country_get', Type::getType(Types::TEXT));
         $changeColumn
-            ->setLength(MySqlPlatform::LENGTH_LIMIT_TEXT)
+            ->setLength(AbstractMySQLPlatform::LENGTH_LIMIT_TEXT)
             ->setNotnull(false)
             ->setDefault(null);
+        /** @psalm-suppress InternalMethod - Class ColumnDiff is internal, but this just works fine. */
         $columnDiff = new ColumnDiff('get_land', $changeColumn);
 
+        /** @psalm-suppress InternalProperty - We want to add some data but there is no set or add. */
         $tableDiff->changedColumns[] = $columnDiff;
     }
 
@@ -170,6 +185,8 @@ final class AddCountryMigration extends AbstractMigration
      * Update column "country_get" default value.
      *
      * @return void
+     *
+     * @throws Exception
      */
     private function updateColumnDefaultValue(): void
     {
@@ -177,7 +194,7 @@ final class AddCountryMigration extends AbstractMigration
             ->update('tl_metamodel_attribute', 't')
             ->set('t.country_get', 'null')
             ->where('t.country_get = ""')
-            ->execute();
+            ->executeStatement();
     }
 
     /**
@@ -191,7 +208,7 @@ final class AddCountryMigration extends AbstractMigration
             ->update('tl_metamodel_attribute', 't')
             ->set('t.countrymode', '"get"')
             ->where('t.country_get != ""')
-            ->execute();
+            ->executeQuery();
     }
 
     /**
@@ -208,10 +225,10 @@ final class AddCountryMigration extends AbstractMigration
         $columns = [];
         // The schema manager return the column list with lowercase keys, wo got to use the real names.
         \array_map(
-            function (Column $column) use (&$columns) {
+            static function (Column $column) use (&$columns) {
                 $columns[$column->getName()] = $column;
             },
-            $this->connection->getSchemaManager()->listTableColumns($tableName)
+            $this->connection->createSchemaManager()->listTableColumns($tableName)
         );
 
         return isset($columns[$columnName]);
