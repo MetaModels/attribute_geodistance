@@ -56,24 +56,36 @@ final class AddCountryMigrationTest extends TestCase
         yield 'required tables not exist' => [
             (object) [
                 'requiredTablesExist'   => false,
+                'columnCountryGetExist' => false,
+                'columnGetLandExist'    => false,
                 'shouldRun'             => false,
-                'columnCountryGetExist' => false
+            ]
+        ];
+
+        yield 'column get_land does not exist' => [
+            (object) [
+                'requiredTablesExist'   => true,
+                'columnCountryGetExist' => false,
+                'columnGetLandExist'    => false,
+                'shouldRun'             => false,
             ]
         ];
 
         yield 'column country_get exist' => [
             (object) [
                 'requiredTablesExist'   => true,
+                'columnCountryGetExist' => true,
+                'columnGetLandExist'    => false,
                 'shouldRun'             => false,
-                'columnCountryGetExist' => true
             ]
         ];
 
         yield 'migration run' => [
             (object) [
                 'requiredTablesExist'   => true,
+                'columnCountryGetExist' => false,
+                'columnGetLandExist'    => true,
                 'shouldRun'             => true,
-                'columnCountryGetExist' => false
             ]
         ];
     }
@@ -94,7 +106,7 @@ final class AddCountryMigrationTest extends TestCase
         $manager      = $this
             ->getMockBuilder(AbstractSchemaManager::class)
             ->setConstructorArgs([$connection, $plattform])
-            ->onlyMethods(['tablesExist', 'listTableColumns', 'listTableDetails', 'alterTable'])
+            ->onlyMethods(['tablesExist', 'introspectTable', 'listTableColumns', 'alterTable'])
             ->getMockForAbstractClass();
 
         $connection
@@ -105,37 +117,76 @@ final class AddCountryMigrationTest extends TestCase
         $queryBuilder
             ->expects($configuration->shouldRun ? self::exactly(2) : self::never())
             ->method('update')
-            ->withConsecutive(['tl_metamodel_attribute', 't'], ['tl_metamodel_attribute', 't'])
-            ->willReturn($queryBuilder);
+            ->willReturnCallback(static function (string $tableName, string $alias) use ($queryBuilder): QueryBuilder {
+                self::assertSame('tl_metamodel_attribute', $tableName);
+                self::assertSame('t', $alias);
+                static $execCount = 0;
+                switch (++$execCount) {
+                    case 1:
+                    case 2:
+                        return $queryBuilder;
+                    default:
+                }
+                self::fail('Called more than two times!');
+            });
         $queryBuilder
             ->expects($configuration->shouldRun ? self::exactly(2) : self::never())
             ->method('set')
-            ->withConsecutive(['t.country_get', 'null'], ['t.countrymode', '"get"'])
-            ->willReturn($queryBuilder);
+            ->willReturnCallback(static function (string $columnName, string $value) use ($queryBuilder): QueryBuilder {
+                static $execCount = 0;
+                switch (++$execCount) {
+                    case 1:
+                        self::assertSame('t.country_get', $columnName);
+                        self::assertSame('null', $value);
+                        return $queryBuilder;
+                    case 2:
+                        self::assertSame('t.countrymode', $columnName);
+                        self::assertSame('"get"', $value);
+                        return $queryBuilder;
+                    default:
+                }
+                self::fail('Called more than two times!');
+            });
         $queryBuilder
             ->expects($configuration->shouldRun ? self::exactly(2) : self::never())
             ->method('where')
-            ->withConsecutive(['t.country_get = ""'], ['t.country_get != ""'])
-            ->willReturn($queryBuilder);
+            ->willReturnCallback(static function (string $filter) use ($queryBuilder): QueryBuilder {
+                static $execCount = 0;
+                switch (++$execCount) {
+                    case 1:
+                        self::assertSame('t.country_get = ""', $filter);
+                        return $queryBuilder;
+                    case 2:
+                        self::assertSame('t.country_get != ""', $filter);
+                        return $queryBuilder;
+                    default:
+                }
+                self::fail('Called more than two times!');
+            });
         $queryBuilderExecuted             = 0;
         $setCountryModeExecuted           = false;
         $updateColumnDefaultValueExecuted = false;
         $queryBuilder
-            ->expects($configuration->shouldRun ? self::exactly(2) : self::never())
-            ->method('execute')
+            ->expects($configuration->shouldRun ? self::exactly(1) : self::never())
+            ->method('executeStatement')
             ->willReturnCallback(
-                function () use (&$queryBuilderExecuted, &$setCountryModeExecuted, &$updateColumnDefaultValueExecuted) {
+                function () use (
+                    &$queryBuilderExecuted,
+                    &$setCountryModeExecuted,
+                    &$updateColumnDefaultValueExecuted
+                ): int {
                     $queryBuilderExecuted++;
 
                     switch ($queryBuilderExecuted) {
                         case 1:
                             $updateColumnDefaultValueExecuted = true;
-                            break;
+                            return 1;
                         case 2:
                             $setCountryModeExecuted = true;
-                            break;
+                            return 1;
                         default:
                     }
+                    return 0;
                 }
             );
 
@@ -145,11 +196,13 @@ final class AddCountryMigrationTest extends TestCase
             ->with(['tl_metamodel', 'tl_metamodel_attribute'])
             ->willReturn($configuration->requiredTablesExist);
 
-        $manager
-            ->expects($configuration->shouldRun ? self::once() : self::never())
-            ->method('listTableDetails')
-            ->with('tl_metamodel_attribute')
-            ->willReturn(new Table('tl_metamodel_attribute'));
+        $count = 0;
+        if ($configuration->requiredTablesExist) {
+            $count++;
+            if ($configuration->columnGetLandExist) {
+                $count++;
+            }
+        }
 
         $listTableColumns = [
             'country_get' =>
@@ -163,14 +216,27 @@ final class AddCountryMigrationTest extends TestCase
                     ->setNotnull(false)
                     ->setDefault(null)
         ];
-        if ($configuration->shouldRun) {
+        if (!$configuration->columnCountryGetExist) {
             unset($listTableColumns['country_get']);
         }
+        if (!$configuration->columnGetLandExist) {
+            unset($listTableColumns['get_land']);
+        }
         $manager
-            ->expects($configuration->requiredTablesExist ? self::exactly(2) : self::never())
+            ->expects($count ? self::exactly($count) : self::never())
             ->method('listTableColumns')
             ->with('tl_metamodel_attribute')
             ->willReturn($listTableColumns);
+        $table = new Table(
+            'tl_metamodel_attribute',
+            $listTableColumns
+        );
+
+        $manager
+            ->expects($configuration->shouldRun ? self::once() : self::never())
+            ->method('introspectTable')
+            ->with('tl_metamodel_attribute')
+            ->willReturn($table);
 
         /** @var TableDiff $tableDiff */
         $tableDiff = null;
@@ -186,9 +252,9 @@ final class AddCountryMigrationTest extends TestCase
 
         $connection
             ->expects(
-                $configuration->requiredTablesExist ? self::exactly($configuration->shouldRun ? 4 : 3) : self::once()
+                $configuration->requiredTablesExist ? self::exactly($configuration->shouldRun ? 4 : 2) : self::once()
             )
-            ->method('getSchemaManager')
+            ->method('createSchemaManager')
             ->willReturn($manager);
 
         $migration = new AddCountryMigration($connection);
@@ -208,11 +274,11 @@ final class AddCountryMigrationTest extends TestCase
             'Adjusted table tl_metamodel_attribute with countrymode and country_get',
             $migrationResult->getMessage()
         );
-        self::assertSame('tl_metamodel_attribute', $tableDiff->getOldTable());
+        self::assertSame('tl_metamodel_attribute', $tableDiff->getOldTable()->getName());
         self::assertCount(1, $tableDiff->addedColumns);
         self::assertCount(1, $tableDiff->changedColumns);
-        self::assertSame(2, $queryBuilderExecuted);
+        self::assertSame(1, $queryBuilderExecuted);
         self::assertTrue($updateColumnDefaultValueExecuted);
-        self::assertTrue($setCountryModeExecuted);
+        self::assertFalse($setCountryModeExecuted);
     }
 }

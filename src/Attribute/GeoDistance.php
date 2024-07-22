@@ -137,10 +137,10 @@ class GeoDistance extends BaseComplex
     /**
      * Run the geolocation and distance core function.
      *
-     * @param array  $idList    The list of id's
-     * @param string $direction The direction for sorting. either 'ASC' or 'DESC', as in plain SQL.
+     * @param list<string> $idList    The list of id's
+     * @param string       $direction The direction for sorting. either 'ASC' or 'DESC', as in plain SQL.
      *
-     * @return array The new list of id's
+     * @return list<string> The new list of id's
      *
      * @throws \RuntimeException If something is missing.
      */
@@ -191,10 +191,10 @@ class GeoDistance extends BaseComplex
     /**
      * Match the id list.
      *
-     * @param array  $idList    The list of ids.
-     * @param string $direction The direction for sorting. either 'ASC' or 'DESC', as in plain SQL.
+     * @param list<string> $idList    The list of ids.
+     * @param string       $direction The direction for sorting. either 'ASC' or 'DESC', as in plain SQL.
      *
-     * @return array
+     * @return list<string>
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) We are at 10 and 10 is allowed.
      */
@@ -253,11 +253,11 @@ class GeoDistance extends BaseComplex
     /**
      * Run the search for the complex attribute geolocation.
      *
-     * @param Container $container The container with all information.
-     * @param array $idList A list with ids.
-     * @param string $direction The direction for sorting. either 'ASC' or 'DESC', as in plain SQL.
+     * @param Container    $container The container with all information.
+     * @param list<string> $idList A list with ids.
+     * @param string       $direction The direction for sorting. either 'ASC' or 'DESC', as in plain SQL.
      *
-     * @return array A list with all sorted id's.
+     * @return list<string> A list with all sorted id's.
      *
      * @throws Exception
      *
@@ -313,13 +313,13 @@ class GeoDistance extends BaseComplex
     /**
      * Run the search for the complex attribute geolocation.
      *
-     * @param Container  $container     The container with all information.
-     * @param array      $idList        The list with the current ID's.
-     * @param IAttribute $latAttribute  The attribute to filter on.
-     * @param IAttribute $longAttribute The attribute to filter on.
-     * @param string     $direction     The direction for sorting. either 'ASC' or 'DESC', as in plain SQL.
+     * @param Container    $container     The container with all information.
+     * @param list<string> $idList        The list with the current ID's.
+     * @param IAttribute   $latAttribute  The attribute to filter on.
+     * @param IAttribute   $longAttribute The attribute to filter on.
+     * @param string       $direction     The direction for sorting. either 'ASC' or 'DESC', as in plain SQL.
      *
-     * @return array A list with all sorted id's.
+     * @return list<string> A list with all sorted id's.
      *
      * @see https://www.movable-type.co.uk/scripts/latlong.html
      */
@@ -611,7 +611,7 @@ class GeoDistance extends BaseComplex
     /**
      * This method is called to retrieve the data for certain items from the database.
      *
-     * @param string[] $arrIds The ids of the items to retrieve.
+     * @param list<string> $arrIds The ids of the items to retrieve.
      *
      * @return array<string, mixed> The nature of the resulting array is a mapping from id => "native data" where
      *                              the definition of "native data" is only of relevance to the given item.

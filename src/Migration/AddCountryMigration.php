@@ -194,7 +194,7 @@ final class AddCountryMigration extends AbstractMigration
             ->update('tl_metamodel_attribute', 't')
             ->set('t.country_get', 'null')
             ->where('t.country_get = ""')
-            ->executeQuery();
+            ->executeStatement();
     }
 
     /**

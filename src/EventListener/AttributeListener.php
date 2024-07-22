@@ -125,7 +125,7 @@ class AttributeListener
 
         $typeFilter = [];
         if ($typeFactory) {
-            $typeFilter = $typeFactory->getKnownAttributeTypes();
+            $typeFilter = $typeFactory->getKnownAttributeTypes() ?? [];
         }
 
         if ('single_attr_id' === $propertyName) {
