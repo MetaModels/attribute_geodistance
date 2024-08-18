@@ -137,7 +137,7 @@
         <source>GoogleMaps lookup</source>
         <target>Recherche GoogleMaps</target>
       </trans-unit>
-      <trans-unit id="perimetersearch.pen_street_maps" resname="perimetersearch.pen_street_maps">
+      <trans-unit id="perimetersearch.open_street_maps" resname="perimetersearch.open_street_maps">
         <source>OpenStreetMap lookup</source>
         <target>Recherche OpenStreetMap</target>
       </trans-unit>
