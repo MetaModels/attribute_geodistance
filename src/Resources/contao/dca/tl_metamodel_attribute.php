@@ -160,7 +160,7 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['datamode'] = [
         'submitOnChange'     => true,
         'includeBlankOption' => true,
         'mandatory'          => true,
-        'tl_class'           => 'clr'
+        'tl_class'           => 'clr w50'
     ]
 ];
 
@@ -194,7 +194,7 @@ $GLOBALS['TL_DCA']['tl_metamodel_attribute']['fields']['first_attr_id'] = [
         'submitOnChange'     => true,
         'includeBlankOption' => true,
         'mandatory'          => true,
-        'tl_class'           => 'w50',
+        'tl_class'           => 'clr w50',
         'chosen'             => true
     ]
 ];

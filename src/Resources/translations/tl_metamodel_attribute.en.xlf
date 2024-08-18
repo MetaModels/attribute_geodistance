@@ -104,7 +104,7 @@
       <trans-unit id="perimetersearch.google_maps" resname="perimetersearch.google_maps">
         <source>GoogleMaps lookup</source>
       </trans-unit>
-      <trans-unit id="perimetersearch.pen_street_maps" resname="perimetersearch.pen_street_maps">
+      <trans-unit id="perimetersearch.open_street_maps" resname="perimetersearch.open_street_maps">
         <source>OpenStreetMap lookup</source>
       </trans-unit>
     </body>
