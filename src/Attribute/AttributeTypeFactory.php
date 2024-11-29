@@ -27,6 +27,7 @@ use Contao\Input;
 use Doctrine\DBAL\Connection;
 use MetaModels\Attribute\AbstractSimpleAttributeTypeFactory;
 use MetaModels\Helper\TableManipulator;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * Attribute type factory for geodistance attributes.
@@ -48,16 +49,23 @@ class AttributeTypeFactory extends AbstractSimpleAttributeTypeFactory
     private ?Adapter $input = null;
 
     /**
+     * @var HttpClientInterface
+     */
+    private HttpClientInterface $httpClient;
+
+    /**
      * {@inheritDoc}
      */
     public function __construct(
         Connection $connection,
         TableManipulator $tableManipulator,
-        ContaoFramework $framework
+        ContaoFramework $framework,
+        HttpClientInterface $httpClient,
     ) {
         parent::__construct($connection, $tableManipulator);
 
-        $this->framework = $framework;
+        $this->framework  = $framework;
+        $this->httpClient = $httpClient;
 
         $this->typeName  = 'geodistance';
         $this->typeIcon  = 'bundles/metamodelsattributegeodistance/image/geodistance.png';
@@ -74,6 +82,13 @@ class AttributeTypeFactory extends AbstractSimpleAttributeTypeFactory
             $this->input = $this->framework->getAdapter(Input::class);
         }
 
-        return new $this->typeClass($metaModel, $information, $this->connection, $this->tableManipulator, $this->input);
+        return new $this->typeClass(
+            $metaModel,
+            $information,
+            $this->connection,
+            $this->tableManipulator,
+            $this->input,
+            $this->httpClient
+        );
     }
 }
