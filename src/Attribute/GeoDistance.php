@@ -36,6 +36,7 @@ use MetaModels\FilterPerimetersearchBundle\FilterHelper\Coordinates;
 use MetaModels\FilterPerimetersearchBundle\Helper\HaversineSphericalDistance;
 use MetaModels\Helper\TableManipulator;
 use MetaModels\IMetaModel;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * This is the MetaModelAttribute class for handling geodistance fields.
@@ -53,13 +54,6 @@ class GeoDistance extends BaseComplex
     private Connection $connection;
 
     /**
-     * The table manipulator.
-     *
-     * @var TableManipulator
-     */
-    private TableManipulator $tableManipulator;
-
-    /**
      * The input provider.
      *
      * @var Adapter
@@ -67,25 +61,36 @@ class GeoDistance extends BaseComplex
     private Adapter $input;
 
     /**
+     * The HTTP client.
+     *
+     * @var HttpClientInterface
+     */
+    private HttpClientInterface $httpClient;
+
+    /**
      * Instantiate an MetaModel attribute.
      *
      * Note that you should not use this directly but use the factory classes to instantiate attributes.
      *
-     * @param IMetaModel            $metaModel        The MetaModel instance this attribute belongs to.
-     * @param array                 $data             The information array, for attribute information, refer to
-     *                                                documentation of table tl_metamodel_attribute and documentation
-     *                                                of the certain attribute classes for information what values are
-     *                                                understood.
-     * @param Connection|null       $connection       The database connection.
-     * @param TableManipulator|null $tableManipulator The table manipulator.
-     * @param Adapter|null          $input            The input provider.
+     * @param IMetaModel               $metaModel        The MetaModel instance this attribute belongs to.
+     * @param array                    $data             The information array, for attribute information, refer to
+     *                                                   documentation of table tl_metamodel_attribute and documentation
+     *                                                   of the certain attribute classes for information what values
+     *                                                   are understood.
+     * @param Connection|null          $connection       The database connection.
+     * @param TableManipulator|null    $tableManipulator The table manipulator (not used! - pass null here).
+     * @param Adapter|null             $input            The input provider.
+     * @param HttpClientInterface|null $httpClient       The HTTP client.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function __construct(
         IMetaModel $metaModel,
         array $data = [],
-        Connection $connection = null,
-        TableManipulator $tableManipulator = null,
-        Adapter $input = null
+        ?Connection $connection = null,
+        ?TableManipulator $tableManipulator = null,
+        ?Adapter $input = null,
+        ?HttpClientInterface $httpClient = null,
     ) {
         parent::__construct($metaModel, $data);
 
@@ -101,19 +106,6 @@ class GeoDistance extends BaseComplex
         }
         $this->connection = $connection;
 
-        if (null === $tableManipulator) {
-            // @codingStandardsIgnoreStart
-            @trigger_error(
-                'Table manipulator is missing. It has to be passed in the constructor. Fallback will be dropped.',
-                E_USER_DEPRECATED
-            );
-            // @codingStandardsIgnoreEnd
-
-            $tableManipulator = System::getContainer()->get('metamodels.table_manipulator');
-            assert($tableManipulator instanceof TableManipulator);
-        }
-        $this->tableManipulator = $tableManipulator;
-
         if (null === $input) {
             // @codingStandardsIgnoreStart
             @\trigger_error(
@@ -125,6 +117,18 @@ class GeoDistance extends BaseComplex
             assert($input instanceof Adapter);
         }
         $this->input = $input;
+
+        if (null === $httpClient) {
+            // @codingStandardsIgnoreStart
+            @\trigger_error(
+                'http client is missing. It has to be passed in the constructor. Fallback will be dropped.',
+                E_USER_DEPRECATED
+            );
+            // @codingStandardsIgnoreEnd
+            $httpClient = System::getContainer()->get('http_client');
+            assert($httpClient instanceof HttpClientInterface);
+        }
+        $this->httpClient = $httpClient;
     }
 
     /**

@@ -6,10 +6,6 @@
     "Contao\\ManagerPlugin\\Bundle\\Config\\BundleConfig",
     "Contao\\ManagerPlugin\\Bundle\\Parser\\ParserInterface",
     "Contao\\ManagerPlugin\\Routing\\RoutingPluginInterface",
-    "Doctrine\\Bundle\\DoctrineBundle\\DoctrineBundle",
-    "Doctrine\\DBAL\\Platforms\\MySqlPlatform",
-    "Symfony\\Component\\Config\\FileLocator",
-    "Symfony\\Contracts\\Translation\\TranslatorInterface",
     "tl_user_group"
   ]
 }

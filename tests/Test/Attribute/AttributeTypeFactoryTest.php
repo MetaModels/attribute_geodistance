@@ -30,6 +30,7 @@ use MetaModels\AttributeGeoDistanceBundle\Attribute\GeoDistance;
 use MetaModels\Helper\TableManipulator;
 use MetaModels\IMetaModel;
 use PHPUnit\Framework\TestCase;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * Class AttributeTypeFactoryTest
@@ -51,10 +52,11 @@ class AttributeTypeFactoryTest extends TestCase
         $connection       = $this->getMockBuilder(Connection::class)->setConstructorArgs([[], $driver])->getMock();
         $tableManipulator = new TableManipulator($connection, []);
         $framework        = $this->getMockBuilder(ContaoFramework::class)->disableOriginalConstructor()->getMock();
+        $httpClient       = $this->getMockBuilder(HttpClientInterface::class)->disableOriginalConstructor()->getMock();
 
         self::assertInstanceOf(
             AttributeTypeFactory::class,
-            new AttributeTypeFactory($connection, $tableManipulator, $framework)
+            new AttributeTypeFactory($connection, $tableManipulator, $framework, $httpClient)
         );
     }
 
@@ -106,7 +108,8 @@ class AttributeTypeFactoryTest extends TestCase
         $connection       = $this->getMockBuilder(Connection::class)->setConstructorArgs([[], $driver])->getMock();
         $tableManipulator = new TableManipulator($connection, []);
         $framework        = $this->getMockBuilder(ContaoFramework::class)->disableOriginalConstructor()->getMock();
+        $httpClient       = $this->getMockBuilder(HttpClientInterface::class)->disableOriginalConstructor()->getMock();
 
-        return new AttributeTypeFactory($connection, $tableManipulator, $framework);
+        return new AttributeTypeFactory($connection, $tableManipulator, $framework, $httpClient);
     }
 }
