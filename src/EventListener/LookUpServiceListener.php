@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_geodistance.
  *
- * (c) 2012-2019 The MetaModels team.
+ * (c) 2012-2024 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,7 +12,8 @@
  *
  * @package    MetaModels/attribute_geodistance
  * @author     Sven Baumann <baumann.sv@gmail.com>
- * @copyright  2012-2019 The MetaModels team.
+ * @author     Ingolf Steinhardt <info@e-spin.de>
+ * @copyright  2012-2024 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_geodistance/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -21,7 +22,7 @@ namespace MetaModels\AttributeGeoDistanceBundle\EventListener;
 
 use MenAtWork\MultiColumnWizardBundle\Event\GetOptionsEvent;
 use MetaModels\FilterPerimetersearchBundle\FilterHelper\Coordinates;
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * This class provides the attribute options and encodes and decodes the attribute id.
@@ -29,12 +30,13 @@ use Symfony\Component\Translation\TranslatorInterface;
 class LookUpServiceListener
 {
     use BaseTrait;
+
     /**
      * The translator.
      *
      * @var TranslatorInterface
      */
-    private $translator;
+    private TranslatorInterface $translator;
 
     /**
      * The constructor.
@@ -60,7 +62,8 @@ class LookUpServiceListener
     {
         // Check the context.
         $allowedProperties = ['lookupservice'];
-        if (!$this->isAllowedProperty($event, 'tl_metamodel_attribute', $allowedProperties)
+        if (
+            !$this->isAllowedProperty($event, 'tl_metamodel_attribute', $allowedProperties)
             || ('lookupservice' !== $event->getSubPropertyName())
         ) {
             return;
@@ -71,10 +74,9 @@ class LookUpServiceListener
             (array) $GLOBALS['METAMODELS']['filters']['perimetersearch']['resolve_class']
         );
 
-        $domain  = 'tl_metamodel_attribute';
         $options = [];
         foreach (\array_keys($resolveClasses) as $name) {
-            $options[$name] = $this->translator->trans($domain . '.perimetersearch.' . $name, [], 'contao_' . $domain);
+            $options[$name] = $this->translator->trans('perimetersearch.' . $name, [], 'tl_metamodel_attribute');
         }
 
         $event->setOptions($options);

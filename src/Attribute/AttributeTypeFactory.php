@@ -3,7 +3,7 @@
 /**
  * This file is part of MetaModels/attribute_geodistance.
  *
- * (c) 2012-2021 The MetaModels team.
+ * (c) 2012-2024 The MetaModels team.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -14,7 +14,7 @@
  * @author     Stefan Heimes <stefan_heimes@hotmail.com>
  * @author     Sven Baumann <baumann.sv@gmail.com>
  * @author     Ingolf Steinhardt <info@e-spin.de>
- * @copyright  2012-2021 The MetaModels team.
+ * @copyright  2012-2024 The MetaModels team.
  * @license    https://github.com/MetaModels/attribute_geodistance/blob/master/LICENSE LGPL-3.0-or-later
  * @filesource
  */
@@ -22,9 +22,12 @@
 namespace MetaModels\AttributeGeoDistanceBundle\Attribute;
 
 use Contao\CoreBundle\Framework\Adapter;
+use Contao\CoreBundle\Framework\ContaoFramework;
+use Contao\Input;
 use Doctrine\DBAL\Connection;
 use MetaModels\Attribute\AbstractSimpleAttributeTypeFactory;
 use MetaModels\Helper\TableManipulator;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * Attribute type factory for geodistance attributes.
@@ -32,20 +35,37 @@ use MetaModels\Helper\TableManipulator;
 class AttributeTypeFactory extends AbstractSimpleAttributeTypeFactory
 {
     /**
-     * The input provider.
+     * The input framework.
      *
-     * @var Adapter
+     * @var ContaoFramework
      */
-    private $input;
+    private ContaoFramework $framework;
+
+    /**
+     * The adapter.
+     *
+     * @var Adapter|null
+     */
+    private ?Adapter $input = null;
+
+    /**
+     * @var HttpClientInterface
+     */
+    private HttpClientInterface $httpClient;
 
     /**
      * {@inheritDoc}
      */
-    public function __construct(Connection $connection, TableManipulator $tableManipulator, Adapter $input = null)
-    {
+    public function __construct(
+        Connection $connection,
+        TableManipulator $tableManipulator,
+        ContaoFramework $framework,
+        HttpClientInterface $httpClient,
+    ) {
         parent::__construct($connection, $tableManipulator);
 
-        $this->input = $input;
+        $this->framework  = $framework;
+        $this->httpClient = $httpClient;
 
         $this->typeName  = 'geodistance';
         $this->typeIcon  = 'bundles/metamodelsattributegeodistance/image/geodistance.png';
@@ -57,6 +77,18 @@ class AttributeTypeFactory extends AbstractSimpleAttributeTypeFactory
      */
     public function createInstance($information, $metaModel)
     {
-        return new $this->typeClass($metaModel, $information, $this->connection, $this->tableManipulator, $this->input);
+        if (null === $this->input) {
+            /** @psalm-suppress InternalMethod - Class ContaoFramework is internal, not the getAdapter() method. */
+            $this->input = $this->framework->getAdapter(Input::class);
+        }
+
+        return new $this->typeClass(
+            $metaModel,
+            $information,
+            $this->connection,
+            $this->tableManipulator,
+            $this->input,
+            $this->httpClient
+        );
     }
 }

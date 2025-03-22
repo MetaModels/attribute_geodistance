@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en" datatype="plaintext" original="src/Resources/translations/tl_metamodel_attribute.en.xlf">
+    <body>
+      <trans-unit id="typeOptions.geodistance" resname="typeOptions.geodistance">
+        <source>Geo Distance</source>
+      </trans-unit>
+      <trans-unit id="parameter_legend" resname="parameter_legend">
+        <source>Address parameter</source>
+      </trans-unit>
+      <trans-unit id="data_legend" resname="data_legend">
+        <source>Data settings</source>
+      </trans-unit>
+      <trans-unit id="get_geo.label" resname="get_geo.label">
+        <source>GET-Parameter for address</source>
+      </trans-unit>
+      <trans-unit id="get_geo.description" resname="get_geo.description">
+        <source>Here you can add the GET-Parameter name for the address lookup.</source>
+      </trans-unit>
+      <trans-unit id="get_land.label" resname="get_land.label">
+        <source>GET-Parameter for country</source>
+      </trans-unit>
+      <trans-unit id="get_land.description" resname="get_land.description">
+        <source>Here you can add the GET-Parameter name for the country lookup.</source>
+      </trans-unit>
+      <trans-unit id="datamode.label" resname="datamode.label">
+        <source>Data mode</source>
+      </trans-unit>
+      <trans-unit id="datamode.description" resname="datamode.description">
+        <source>Here you can choose if you have one single attribute or two attributes.</source>
+      </trans-unit>
+      <trans-unit id="single_attr_id.label" resname="single_attr_id.label">
+        <source>Attribute</source>
+      </trans-unit>
+      <trans-unit id="single_attr_id.description" resname="single_attr_id.description">
+        <source>Choose the attribute with the latitude and longitude values.</source>
+      </trans-unit>
+      <trans-unit id="first_attr_id.label" resname="first_attr_id.label">
+        <source>Attribute - Latitude</source>
+      </trans-unit>
+      <trans-unit id="first_attr_id.description" resname="first_attr_id.description">
+        <source>Choose the attribute for the latitude values.</source>
+      </trans-unit>
+      <trans-unit id="second_attr_id.label" resname="second_attr_id.label">
+        <source>Attribute - Longitude</source>
+      </trans-unit>
+      <trans-unit id="second_attr_id.description" resname="second_attr_id.description">
+        <source>Choose the attribute for the longitude values.</source>
+      </trans-unit>
+      <trans-unit id="lookupservice.label" resname="lookupservice.label">
+        <source>LookUp Services</source>
+      </trans-unit>
+      <trans-unit id="lookupservice.description" resname="lookupservice.description">
+        <source>Here you can choose a look-up service for resolving address data.</source>
+      </trans-unit>
+      <trans-unit id="lookupservice_service.label" resname="lookupservice_service.label">
+        <source>LookUp Services</source>
+      </trans-unit>
+      <trans-unit id="lookupservice_service.description" resname="lookupservice_service.description">
+        <source>Here you can choose a look-up service for resolving address data.</source>
+      </trans-unit>
+      <trans-unit id="lookupservice_api_token.label" resname="lookupservice_api_token.label">
+        <source>API token</source>
+      </trans-unit>
+      <trans-unit id="lookupservice_api_token.description" resname="lookupservice_api_token.description">
+        <source>Here you can add a API token.</source>
+      </trans-unit>
+      <trans-unit id="countrymode.label" resname="countrymode.label">
+        <source>Country mode</source>
+      </trans-unit>
+      <trans-unit id="countrymode.description" resname="countrymode.description">
+        <source>Here you can choose how the language will used.</source>
+      </trans-unit>
+      <trans-unit id="country_preset.label" resname="country_preset.label">
+        <source>Country preset</source>
+      </trans-unit>
+      <trans-unit id="country_preset.description" resname="country_preset.description">
+        <source>Here you can add a preset for the language.</source>
+      </trans-unit>
+      <trans-unit id="country_get.label" resname="country_get.label">
+        <source>GET-Parameter for country</source>
+      </trans-unit>
+      <trans-unit id="country_get.description" resname="country_get.description">
+        <source>Here you can add the GET-Parameter name for the country lookup.</source>
+      </trans-unit>
+      <trans-unit id="datamode_options.single" resname="datamode_options.single">
+        <source>Single Mode - One attribute</source>
+      </trans-unit>
+      <trans-unit id="datamode_options.multi" resname="datamode_options.multi">
+        <source>Multi Mode - Two attributes</source>
+      </trans-unit>
+      <trans-unit id="countrymode_options.none" resname="countrymode_options.none">
+        <source>None</source>
+      </trans-unit>
+      <trans-unit id="countrymode_options.preset" resname="countrymode_options.preset">
+        <source>Preset by system</source>
+      </trans-unit>
+      <trans-unit id="countrymode_options.get" resname="countrymode_options.get">
+        <source>Use GET-Param</source>
+      </trans-unit>
+      <trans-unit id="perimetersearch.coordinates" resname="perimetersearch.coordinates">
+        <source>Coordinates input</source>
+      </trans-unit>
+      <trans-unit id="perimetersearch.google_maps" resname="perimetersearch.google_maps">
+        <source>GoogleMaps lookup</source>
+      </trans-unit>
+      <trans-unit id="perimetersearch.open_street_maps" resname="perimetersearch.open_street_maps">
+        <source>OpenStreetMap lookup</source>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

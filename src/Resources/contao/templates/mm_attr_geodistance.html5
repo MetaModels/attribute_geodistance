@@ -1,3 +1,1 @@
-<?php if ($this->raw !== -1): ?>
-    <span class="text<?= $this->additional_class; ?>"><?= $this->raw; ?> KM</span>
-<?php endif; ?>
+<span class="text geodistance<?= $this->additional_class ?>"><?php if ($this->raw !== -1): ?><?= $this->raw ?>&nbsp;<span class="unit">km</span><?php endif; ?></span>

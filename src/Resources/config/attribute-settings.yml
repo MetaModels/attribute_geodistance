@@ -4,6 +4,7 @@ services:
     arguments:
       - "@database_connection"
       - "@metamodels.table_manipulator"
-      - "@metamodels.contao_input"
+      - "@contao.framework"
+      - "@http_client"
     tags:
       - { name: metamodels.attribute_factory }
